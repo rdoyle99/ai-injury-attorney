@@ -9,9 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@chatscope/chat-ui-kit-react": "^2.0.3",
+    "@nlux/openai-react": "^1.0.10",
+    "deep-chat-react": "^1.4.11",
+    "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.3"
+    "tailwindcss-bg-patterns": "^0.3.0"
   },
   "devDependencies": {
     "postcss": "^8",
