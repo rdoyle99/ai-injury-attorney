@@ -1,6 +1,6 @@
 import {useState, useEffect} from "react";
 import Head from "next/head";
-
+//comment for no reason
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import {
   MainContainer,
