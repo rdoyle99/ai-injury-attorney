@@ -11,36 +11,38 @@ import {
   TypingIndicator,
 } from "@chatscope/chat-ui-kit-react";
 
-const API_KEY = process.env.OPEN_AI_KEY;
-
 export default function Home() {
   const [messages, setMessages] = useState([
     {
-      message:
+      role: "system",
+      content:
+        "This GPT, acting as a personal injury attorney bot, is tailored to handle a broad range of injury cases. It asks clear, direct questions, one at a time, to gather essential details about the injury and the circumstances. Once a user indicates a preferred path—such as negotiation or legal action—the bot suggests that it has an attorney who can assist with this and asks for contact information to arrange a free consultation. Throughout, it communicates at a 3rd to 5th grade reading level to ensure accessibility and clarity. The bot provides information on potential financial compensation beyond insurance offers, emphasizing a professional, understanding, and straightforward approach.",
+    },
+    {
+      content:
         "Let's start by learning more about your accident. What happened?",
-      sentTime: "just now",
-      sender: "AttorneyAI",
+
+      role: "assistant",
     },
   ]);
   const [isTyping, setIsTyping] = useState(false);
 
   const handleSendRequest = async (message) => {
     const newMessage = {
-      message,
-      direction: "outgoing",
-      sender: "user",
+      content: message,
+      role: "user",
     };
 
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    const updatedMessages = [...messages, newMessage];
+    setMessages(updatedMessages);
     setIsTyping(true);
 
     try {
-      const response = await processMessageToChatGPT([...messages, newMessage]);
-      const content = response.choices[0]?.message?.content;
-      if (content) {
+      const response = await sendMessageToChatAPI(newMessage); // Pass updatedMessages directly
+      if (response) {
         const chatGPTResponse = {
-          message: content,
-          sender: "AttorneyAI",
+          content: response,
+          role: "assistant",
         };
         setMessages((prevMessages) => [...prevMessages, chatGPTResponse]);
       }
@@ -51,39 +53,18 @@ export default function Home() {
     }
   };
 
-  async function processMessageToChatGPT(chatMessages) {
-    const apiMessages = chatMessages.map((messageObject) => {
-      const role = messageObject.sender === "AttorneyAI" ? "assistant" : "user";
-      return {role, content: messageObject.message};
-    });
-
-    const apiRequestBody = {
-      model: "gpt-4-turbo",
-      messages: [
-        {
-          role: "system",
-          content:
-            "This GPT, acting as a personal injury attorney bot, is tailored to handle a broad range of injury cases. It asks clear, direct questions, one at a time, to gather essential details about the injury and the circumstances. Once a user indicates a preferred path—such as negotiation or legal action—the bot suggests that it has an attorney who can assist with this and asks for contact information to arrange a free consultation. Throughout, it communicates at a 3rd to 5th grade reading level to ensure accessibility and clarity. The bot provides information on potential financial compensation beyond insurance offers, emphasizing a professional, understanding, and straightforward approach.",
-        },
-        {
-          role: "assistant",
-          content:
-            "Let's start by learning more about your accident. What happened?",
-        },
-        ...apiMessages,
-      ],
-    };
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  async function sendMessageToChatAPI(newMessage) {
+    const data = await fetch("/api/chat", {
       method: "POST",
       headers: {
-        Authorization: "Bearer " + API_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(apiRequestBody),
+      body: JSON.stringify({
+        conversation: [...messages, newMessage],
+      }),
     });
-
-    return response.json();
+    let resp = await data.json();
+    return resp;
   }
 
   return (
@@ -149,15 +130,18 @@ export default function Home() {
                 }
               >
                 {messages.map((message, i) => {
+                  if (message.role === "system") {
+                    return <div className="hidden"></div>;
+                  }
                   const messageClass =
-                    message.sender === "AttorneyAI"
+                    message.role === "assistant"
                       ? "bg-gray-300 text-left flex justify-start"
                       : "bg-blue-100 text-right flex justify-end";
                   return (
                     <div
                       key={i}
                       className={`flex w-full ${
-                        message.sender === "AttorneyAI"
+                        message.role === "assistant"
                           ? "justify-start"
                           : "justify-end"
                       }`}
@@ -165,7 +149,7 @@ export default function Home() {
                       <p
                         className={`${messageClass} p-2 rounded-lg max-w-xs mx-2 my-1`}
                       >
-                        {message.message}
+                        {message.content}
                       </p>
                     </div>
                   );
