@@ -18,6 +18,7 @@ export default async function handler(req, res) {
   }
 }
 async function fetchOpenAIResponse(conversation) {
+  console.log("🟢", conversation);
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
@@ -30,6 +31,6 @@ async function fetchOpenAIResponse(conversation) {
     frequency_penalty: 0.5,
     presence_penalty: 0.5,
   });
-
+  console.log("🟡", response.choices[0].message.content);
   return response.choices[0].message.content;
 }
